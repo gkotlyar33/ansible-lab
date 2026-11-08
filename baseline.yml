@@ -44,6 +44,15 @@
         enabled: true
       loop: "{{ baseline_services }}"
 
+    - name: Check time sync status
+      ansible.builtin.command: chronyc tracking
+      register: chrony_status
+      changed_when: false
+
+    - name: Show time sync status
+      ansible.builtin.debug:
+        var: chrony_status.stdout_lines
+
   handlers:
     - name: restart chronyd
       ansible.builtin.service:
