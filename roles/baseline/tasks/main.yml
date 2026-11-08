@@ -1,0 +1,30 @@
+---
+- name: Install baseline packages
+  ansible.builtin.dnf:
+    name: "{{ baseline_packages }}"
+    state: present
+
+- name: Login banner from template
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    mode: "0644"
+
+- name: Point chrony at our time server
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^server {{ time_server | regex_escape }}'
+    line: "server {{ time_server }} prefer iburst"
+  notify: restart chronyd
+
+- name: Baseline services enabled and running
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ baseline_services }}"
+
+- name: Check time sync status
+  ansible.builtin.command: chronyc tracking
+  register: chrony_status
+  changed_when: false

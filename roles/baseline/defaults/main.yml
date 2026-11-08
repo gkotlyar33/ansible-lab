@@ -1,0 +1,5 @@
+---
+baseline_packages: [tmux, vim-enhanced, chrony]
+baseline_services: [chronyd, sshd]
+time_server: 169.254.169.123
+motd_note: ""
