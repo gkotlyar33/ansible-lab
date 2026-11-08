@@ -1,8 +1,14 @@
 ---
-# First AAP job template: a tiny "baseline" for node-r9 (RHEL 9) and node-r10 (RHEL 10).
+# Lab baseline v2: adds a loop and a handler (DO007 "constructs").
 - name: Lab baseline
   hosts: all
   become: true
+  vars:
+    time_server: 169.254.169.123   # Amazon Time Sync; on-prem this would be your NTP servers (group_vars)
+    baseline_services:
+      - chronyd
+      - sshd
+
   tasks:
     - name: Report what we're talking to
       ansible.builtin.debug:
@@ -10,7 +16,7 @@
 
     - name: Install admin tools (same on both)
       ansible.builtin.dnf:
-        name: [tmux, vim-enhanced]
+        name: [tmux, vim-enhanced, chrony]
         state: present
 
     - name: RHEL 10 only - example of a fact-driven task
@@ -23,3 +29,23 @@
         dest: /etc/motd
         content: "Managed by AAP. RHEL {{ ansible_facts['distribution_major_version'] }} lab node.\n"
         mode: "0644"
+
+    - name: Point chrony at our time server
+      ansible.builtin.lineinfile:
+        path: /etc/chrony.conf
+        regexp: '^server 169\.254\.169\.123'
+        line: "server {{ time_server }} prefer iburst"
+      notify: restart chronyd
+
+    - name: Make sure baseline services are enabled and running (loop)
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: "{{ baseline_services }}"
+
+  handlers:
+    - name: restart chronyd
+      ansible.builtin.service:
+        name: chronyd
+        state: restarted
