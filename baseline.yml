@@ -53,6 +53,7 @@
       ansible.builtin.debug:
         var: chrony_status.stdout_lines
 
+    # Paste ABOVE the "  handlers:" line in baseline.yml (4-space indent, same as other tasks).
     - name: Risky change with automatic rollback
       block:
         - name: Back up chrony.conf before changing anything
@@ -61,13 +62,13 @@
             dest: /etc/chrony.conf.bak
             remote_src: true
             mode: "0644"
- 
+
         - name: Simulated failure on node-r9 only
           ansible.builtin.dnf:
             name: not-a-real-package
             state: present
           when: inventory_hostname == 'node-r9'
- 
+
       rescue:
         - name: Roll back chrony.conf from the backup
           ansible.builtin.copy:
@@ -75,11 +76,11 @@
             dest: /etc/chrony.conf
             remote_src: true
             mode: "0644"
- 
+
         - name: Report what failed
           ansible.builtin.debug:
             msg: "Change failed on {{ inventory_hostname }}: {{ ansible_failed_result.msg }}"
- 
+
       always:
         - name: Runs no matter what
           ansible.builtin.debug:
