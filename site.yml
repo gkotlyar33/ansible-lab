@@ -1,6 +1,6 @@
 ---
 - name: Apply baseline to all lab nodes
-  hosts: all
+  hosts: '{{ target_name | default("all") }}'
   become: true
   roles:
     - baseline
